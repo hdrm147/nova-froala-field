@@ -15,17 +15,31 @@ class FroalaUploadController extends Controller
      */
     public function store(NovaRequest $request)
     {
+        $found = true;
         $field = $request->newResource()
             ->availableFields($request)
-            ->findFieldByAttribute($request->field, function () {
-                abort(404);
+            ->findFieldByAttribute($request->field, function () use(&$found) {
+                $found = false;
             });
 
+        if (!$found) {
+            $name = str_replace("translations_","",$request->field);
+            $name = str_replace("_en","",$name);
+            $name = str_replace("_ar","",$name);
+            $field = $request->newResource()
+                ->availableFields($request)
+                ->findFieldByAttribute($name, function () {
+                    abort(404);
+                });
+        }
         return response()->json(['link' => call_user_func(
             $field->attachCallback,
             $request
         )]);
+
+
     }
+
 
     /**
      * Delete a single, persisted attachment for a Trix field by URL.
