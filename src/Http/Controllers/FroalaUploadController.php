@@ -51,9 +51,20 @@ class FroalaUploadController extends Controller
     {
         $field = $request->newResource()
             ->availableFields($request)
-            ->findFieldByAttribute($request->field, function () {
-                abort(404);
+            ->findFieldByAttribute($request->field, function () use(&$found) {
+                $found = false;
             });
+
+        if (!$found) {
+            $name = str_replace("translations_","",$request->field);
+            $name = str_replace("_en","",$name);
+            $name = str_replace("_ar","",$name);
+            $field = $request->newResource()
+                ->availableFields($request)
+                ->findFieldByAttribute($name, function () {
+                    abort(404);
+                });
+        }
 
         return call_user_func($field->detachCallback, $request);
     }
@@ -68,9 +79,20 @@ class FroalaUploadController extends Controller
     {
         $field = $request->newResource()
             ->availableFields($request)
-            ->findFieldByAttribute($request->field, function () {
-                abort(404);
+            ->findFieldByAttribute($request->field, function () use(&$found) {
+                $found = false;
             });
+
+        if (!$found) {
+            $name = str_replace("translations_","",$request->field);
+            $name = str_replace("_en","",$name);
+            $name = str_replace("_ar","",$name);
+            $field = $request->newResource()
+                ->availableFields($request)
+                ->findFieldByAttribute($name, function () {
+                    abort(404);
+                });
+        }
 
         return call_user_func($field->discardCallback, $request);
     }
