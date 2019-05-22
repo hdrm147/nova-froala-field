@@ -49,6 +49,7 @@ class FroalaUploadController extends Controller
      */
     public function destroyAttachment(NovaRequest $request)
     {
+        $found = true;
         $field = $request->newResource()
             ->availableFields($request)
             ->findFieldByAttribute($request->field, function () use(&$found) {
@@ -77,6 +78,7 @@ class FroalaUploadController extends Controller
      */
     public function destroyPending(NovaRequest $request)
     {
+        $found = true;
         $field = $request->newResource()
             ->availableFields($request)
             ->findFieldByAttribute($request->field, function () use(&$found) {
