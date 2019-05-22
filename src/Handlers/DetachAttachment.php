@@ -2,6 +2,7 @@
 
 namespace Froala\NovaFroalaField\Handlers;
 
+use Froala\NovaFroalaField\Models\PendingAttachment;
 use Illuminate\Http\Request;
 use Froala\NovaFroalaField\Models\Attachment;
 
@@ -15,9 +16,13 @@ class DetachAttachment
      */
     public function __invoke(Request $request)
     {
-        Attachment::where('url', $request->src)
+        Attachment::where('url', $request->attachmentUrl)
                         ->get()
                         ->each
                         ->purge();
+
+        $path = explode("/",$request->attachmentUrl);
+        $path = end($path);
+        PendingAttachment::where('attachment','=',$path)->get()->each->purge();
     }
 }
