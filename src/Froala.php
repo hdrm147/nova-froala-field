@@ -137,17 +137,20 @@ class Froala extends Trix
     protected function fillAttribute(NovaRequest $request, $requestAttribute, $model, $attribute)
     {
         if (isset($this->fillCallback)) {
-            if ($request->{$this->attribute . 'DraftId'} && $this->withFiles && $model->id) {
+            if ($request->{$this->attribute . 'DraftId'} && $this->withFiles) {
                 $pendingAttachmentClass =
                     config('nova.froala-field.attachments_driver', self::DRIVER_NAME) === self::DRIVER_NAME
                         ? FroalaPendingAttachment::class
                         : TrixPendingAttachment::class;
 
-                $pendingAttachmentClass::persistDraft(
-                    $request->{$this->attribute . 'DraftId'},
-                    $this,
-                    $model
-                );
+                $self = $this;
+                $model::saved(function ($mode) use ($pendingAttachmentClass, $request, $model,$self) {
+                    $pendingAttachmentClass::persistDraft(
+                        $request->{$this->attribute . 'DraftId'},
+                        $self,
+                        $model
+                    );
+                });
             }
             return call_user_func(
                 $this->fillCallback,
