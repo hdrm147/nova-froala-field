@@ -34,6 +34,9 @@ class DeleteAttachments
      */
     public function __invoke(Request $request, $model)
     {
+        $path = parse_url($request->attachmentUrl, PHP_URL_PATH);
+        $path = explode("/",$path);
+        \File::delete(storage_path(end($path)));
         Attachment::where('attachable_type', get_class($model))
                 ->where('attachable_id', $model->getKey())
                 ->get()
