@@ -35,7 +35,7 @@ class Froala extends Trix
     public function __construct(string $name, ?string $attribute = null, $resolveCallback = null)
     {
         parent::__construct($name, $attribute, $resolveCallback);
-
+        $this->withFiles = true;
         $uploadLimits = [
             'fileMaxSize',
             'imageMaxSize',
@@ -64,14 +64,14 @@ class Froala extends Trix
     protected function getUploadMaxFilesize(): int
     {
         $uploadMaxFilesize = config('nova.froala-field.upload_max_filesize')
-                            ?? ini_get('upload_max_filesize');
+            ?? ini_get('upload_max_filesize');
 
         if (is_numeric($uploadMaxFilesize)) {
             return $uploadMaxFilesize;
         }
 
         $metric = strtoupper(substr($uploadMaxFilesize, -1));
-        $uploadMaxFilesize = (int) $uploadMaxFilesize;
+        $uploadMaxFilesize = (int)$uploadMaxFilesize;
 
         switch ($metric) {
             case 'K':
@@ -128,15 +128,27 @@ class Froala extends Trix
     /**
      * Hydrate the given attribute on the model based on the incoming request.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest $request
-     * @param  string $requestAttribute
-     * @param  object $model
-     * @param  string $attribute
+     * @param \Laravel\Nova\Http\Requests\NovaRequest $request
+     * @param string $requestAttribute
+     * @param object $model
+     * @param string $attribute
      * @return \Closure|null
      */
     protected function fillAttribute(NovaRequest $request, $requestAttribute, $model, $attribute)
     {
         if (isset($this->fillCallback)) {
+            if ($request->{$this->attribute . 'DraftId'} && $this->withFiles) {
+                $pendingAttachmentClass =
+                    config('nova.froala-field.attachments_driver', self::DRIVER_NAME) === self::DRIVER_NAME
+                        ? FroalaPendingAttachment::class
+                        : TrixPendingAttachment::class;
+
+                $pendingAttachmentClass::persistDraft(
+                    $request->{$this->attribute . 'DraftId'},
+                    $this,
+                    $model
+                );
+            }
             return call_user_func(
                 $this->fillCallback,
                 $request,
@@ -153,15 +165,15 @@ class Froala extends Trix
             $attribute
         );
 
-        if ($request->{$this->attribute.'DraftId'} && $this->withFiles) {
+        if ($request->{$this->attribute . 'DraftId'} && $this->withFiles) {
             $pendingAttachmentClass =
                 config('nova.froala-field.attachments_driver', self::DRIVER_NAME) === self::DRIVER_NAME
-                ? FroalaPendingAttachment::class
-                : TrixPendingAttachment::class;
+                    ? FroalaPendingAttachment::class
+                    : TrixPendingAttachment::class;
 
             return function () use ($request, $requestAttribute, $model, $attribute, $pendingAttachmentClass) {
                 $pendingAttachmentClass::persistDraft(
-                    $request->{$this->attribute.'DraftId'},
+                    $request->{$this->attribute . 'DraftId'},
                     $this,
                     $model
                 );
@@ -179,7 +191,7 @@ class Froala extends Trix
     /**
      * Specify the callback that should be used to get attached images list.
      *
-     * @param  callable  $imagesCallback
+     * @param callable $imagesCallback
      * @return $this
      */
     public function images(callable $imagesCallback)
